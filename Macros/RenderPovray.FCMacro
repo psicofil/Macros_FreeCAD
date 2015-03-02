@@ -1,0 +1,122 @@
+# -*- coding: utf-8 -*-
+# Render whit Povray inside of FreeCAD
+# Author: Gomez Lucio
+import subprocess
+import Image, ImageGui 
+import FreeCAD, FreeCADGui
+import RaytracingGui
+import PySide
+from PySide import QtGui, QtCore
+from PySide.QtGui import *
+ 
+class RenderPov(QtGui.QWidget):
+    def __init__(self):
+        super(RenderPov, self).__init__()
+        self.initUI()
+    def initUI(self):
+        self.t0 = QtGui.QLabel("Pov File",self)
+        self.l0 = QtGui.QLineEdit(self)
+        self.l0.setText("Pov File does not has been even selected")
+        self.t1 = QtGui.QLabel("Width",self)
+        self.l1 = QtGui.QLineEdit(self)
+        self.l1.setText("1024")
+        self.t2 = QtGui.QLabel(" High",self)
+        self.l2 = QtGui.QLineEdit(self)
+        self.l2.setText("768")
+        self.t3 = QtGui.QLabel(" Quality(0-11)",self)
+        self.l3 = QtGui.QSpinBox(self)
+        self.l3.setMaximum(11)
+        self.l3.setProperty("value", 8)
+        self.h1 = QtGui.QSlider(self)
+        self.h1.setMaximum(11)
+        self.h1.setProperty("value", 8)
+        self.h1.setOrientation(QtCore.Qt.Horizontal)
+        self.TBPovFile = QtGui.QToolButton(self)
+        self.TBPovFile.setText('Select')
+        self.OPPovFile = QtGui.QToolButton(self)
+        self.OPPovFile.setText('Edit')
+        self.antop = QtGui.QCheckBox("    Antialasing",self)
+        self.antial = False
+        self.lantial = QtGui.QLineEdit(self)
+        self.lantial.setText("0.3")
+        self.antop.stateChanged.connect(self.AntialState)
+        self.alphop = QtGui.QCheckBox("    Alpha  Channel",self)
+        self.alpha = False
+        self.alphop.stateChanged.connect(self.AlphaState)
+        self.okbox = QtGui.QDialogButtonBox(self)
+        self.okbox.setOrientation(QtCore.Qt.Horizontal)
+        self.okbox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        layout = QtGui.QGridLayout()
+        #self.resize(240, 380)
+        layout.addWidget(self.t0, 0, 0)
+        layout.addWidget(self.l0, 0, 1)
+        layout.addWidget(self.TBPovFile, 3, 0)
+        layout.addWidget(self.OPPovFile, 3, 1)
+        layout.addWidget(self.t1, 4, 0)
+        layout.addWidget(self.l1, 4, 1)
+        layout.addWidget(self.t2, 5, 0)
+        layout.addWidget(self.l2, 5, 1)
+        layout.addWidget(self.t3, 6, 0)
+        layout.addWidget(self.l3, 6, 1)
+        layout.addWidget(self.h1,7,0)
+        layout.addWidget(self.antop,8,0)
+        layout.addWidget(self.lantial,8,1)
+        layout.addWidget(self.alphop,9,0)
+        layout.addWidget(self.okbox,10,0)
+        self.setLayout(layout)
+        QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
+        QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
+        QtCore.QObject.connect(self.h1, QtCore.SIGNAL("sliderMoved(int)"), self.l3.setValue)
+        QtCore.QObject.connect(self.TBPovFile, QtCore.SIGNAL("pressed()"), self.povfile)
+        QtCore.QObject.connect(self.OPPovFile, QtCore.SIGNAL("pressed()"), self.OpenPovFile)
+    def cancel(self):
+       d.close()
+
+    def povfile(self):
+       PageName = QtGui.QFileDialog.getOpenFileName(QtGui.qApp.activeWindow(),'Open povray file','*.pov')
+       self.l0.setText(str(PageName[0]))
+
+    def AntialState(self, state):
+        if state == QtCore.Qt.Checked:
+            self.antial = True
+        else:
+            self.antial = False
+
+    def AlphaState(self, state):
+        if state == QtCore.Qt.Checked:
+            self.alpha = True
+        else:
+            self.alpha = False
+
+    def proceed(self):
+       try:
+          d = self.l0.text()
+          w = str(int(self.l1.text()))
+          h = str(int(self.l2.text()))
+          q = str(int(self.l3.text()))
+          ant = self.lantial.text()
+          if self.antial == True:
+             a = ' +A' + ' Antialias_Threshold=' + ant
+          else:
+             a = ' -A'
+          if self.alpha == True:
+             ua = ' +UA'
+          else:
+             ua = ' -UA'
+          output = subprocess.check_output(['povray ' + d +' +W' + w +' +H'+ h +'^C' + ' +Q' + q + ' +Dx' + a + ua, '-1'], shell = True, stderr=subprocess.STDOUT,)
+          FreeCAD.Console.PrintMessage(output)
+          di=d.replace('pov','png')
+          ImageGui.open(di)
+       except:
+           FreeCAD.Console.PrintError('Error, invalid povray file or options')
+           FreeCAD.Console.PrintMessage(output)
+
+    def OpenPovFile(self):
+       RaytracingGui.open(self.l0.text())
+
+
+mw = FreeCADGui.getMainWindow()
+d = QtGui.QDockWidget()
+d.setWidget(RenderPov())
+mw.addDockWidget(QtCore. Qt.RightDockWidgetArea,d)
+
