@@ -47,6 +47,8 @@ class MeshGmsh(QtGui.QWidget):
         self.t1 = QtGui.QLabel("Set maximum mesh element size ",self)
         self.l1 = QtGui.QDoubleSpinBox(self)
         self.l1.setValue(5.0)
+        self.l1.setMaximum (10000000.0)
+        self.l1.setMinimum (0.00000001)
         # Set Order:
         self.tord = QtGui.QLabel("Set mesh order ",self)
         self.lord = QtGui.QSpinBox(self)
@@ -144,7 +146,7 @@ class MeshGmsh(QtGui.QWidget):
           del TempFile
           del TempMeshFile
        except:
-           FreeCAD.Console.PrintError('Error!!, Select a Part File')
+           FreeCAD.Console.PrintError('Error!!, sorry..')
            FreeCAD.Console.PrintMessage(output)
            del TempFile
            del TempMeshFile
