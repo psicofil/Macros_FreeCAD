@@ -127,7 +127,7 @@ class MeshGmsh(QtGui.QWidget):
         order = self.sb_order.text()
 
         if self.cb_optimized.isChecked():
-            cmd_optimize = ' -optimize -optimize_ho'
+            cmd_optimize = ' -optimize'
         else:
             cmd_optimize = ' '
 
