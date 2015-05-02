@@ -1,162 +1,172 @@
 # -*- coding: utf-8 -*-
-# Mesh whit GMSH inside of FreeCAD
+# Mesh with GMSH inside of FreeCAD
 # Author: Gomez Lucio
+# Modified by: PrzemoF
 # License: LGPL v 2.1
-import subprocess,tempfile
-import ImportGui
-import FreeCAD, FreeCADGui
-import PySide
 from PySide import QtGui, QtCore
-from PySide.QtGui import *
 import Fem
+import FreeCAD
+import FreeCADGui
+import ImportGui
 import Mesh
+import subprocess
+import sys
+import tempfile
 
-# Algoritmos: meshadapt, del2d, front2d, delquad, del3d, front3d, mmg3d, pack (iso,netgen,tetgen)
- 
+
 class MeshGmsh(QtGui.QWidget):
     def __init__(self):
         super(MeshGmsh, self).__init__()
         self.initUI()
+
+    def __del__(self):
+        return
+
     def initUI(self):
-        # Title:
-        self.title = QtGui.QLabel("<b>Macro GMSH mesh generator <b>",self)
+        self.title = QtGui.QLabel("<b>Macro GMSH mesh generator <b>", self)
         self.title.show()
-        #self.title.setAlignment(QtCore.Qt.AlignCenter)
-        # Tipo of Mesh
-#        self.tM = QtGui.QLabel("Mesh Type ",self)
-        self.CB2D = QtGui.QCheckBox("   2D (only whit stl format)",self)
-        self.f2D = False
-        self.CB2D.stateChanged.connect(self.f2DState)
-        self.CB3D = QtGui.QCheckBox("   3D",self)
-        self.f3D = True
-        self.CB3D.stateChanged.connect(self.f3DState)
-        self.CB3D.setCheckState(QtCore.Qt.Checked)
-        # Algorithm:
-        self.t0 = QtGui.QLabel("Algorithm ",self)
-        self.combo = QtGui.QComboBox(self)
-        self.list1 = [ self.tr('iso'),self.tr('netgen'),self.tr('tetgen'),self.tr('meshadapt'),]
-        self.combo.addItems(self.list1)
-        self.combo.setCurrentIndex(1)
-        # Format:
-        self.tf = QtGui.QLabel("Format ",self)
-        self.combo2 = QtGui.QComboBox(self)
-        self.list2 = [ self.tr('unv'),self.tr('stl'),self.tr('med')]
-        self.combo2.addItems(self.list2)
-        self.combo2.setCurrentIndex(0)
-        # Element size:
-        self.t1 = QtGui.QLabel("Set maximum mesh element size ",self)
-        self.l1 = QtGui.QDoubleSpinBox(self)
-        self.l1.setValue(5.0)
-        self.l1.setMaximum (10000000.0)
-        self.l1.setMinimum (0.00000001)
-        # Set Order:
-        self.tord = QtGui.QLabel("Set mesh order ",self)
-        self.lord = QtGui.QSpinBox(self)
-        self.lord.setValue(2)
-        self.lord.setMaximum (5)
-        self.lord.setMinimum (1)
+        self.rb_2D = QtGui.QRadioButton("   2D", self)
+        self.rb_3D = QtGui.QRadioButton("   3D", self)
+        self.rb_2D.toggled.connect(self.rb_2D_toggled)
+        self.rb_3D.setChecked(QtCore.Qt.Checked)
         # Optimized:
-        #self.optimNet = QtGui.QCheckBox("Optimized (netgen)",self)
-        #self.optimNetgen = False
-        self.optim = QtGui.QCheckBox("    Optimized",self)
-        self.optimized = False
-        self.optim.stateChanged.connect(self.OptimState)
+        self.cb_optimized = QtGui.QCheckBox("    Optimized", self)
+        self.cb_optimized.setChecked(QtCore.Qt.Checked)
+        # Algorithm:
+        self.l_algorithm = QtGui.QLabel("Algorithm ", self)
+        self.cmb_algorithm = QtGui.QComboBox(self)
+        self.algorithm_list = [self.tr('iso'), self.tr('netgen'), self.tr('tetgen'), self.tr('meshadapt'), ]
+        self.cmb_algorithm.addItems(self.algorithm_list)
+        self.cmb_algorithm.setCurrentIndex(2)
+        # Format:
+        self.l_format = QtGui.QLabel("Format ", self)
+        self.cmb_format = QtGui.QComboBox(self)
+        self.format_list = [self.tr('unv'), self.tr('stl'), self.tr('med')]
+        self.cmb_format.addItems(self.format_list)
+        self.cmb_format.setCurrentIndex(0)
+        self.stored_cmb_format_index = 0
+        # Element size:
+        self.l_max_elem_size = QtGui.QLabel("Set maximum mesh element size ", self)
+        self.sb_max_element_size = QtGui.QDoubleSpinBox(self)
+        self.sb_max_element_size.setValue(5.0)
+        self.sb_max_element_size.setMaximum(10000000.0)
+        self.sb_max_element_size.setMinimum(0.00000001)
+        # Set Order:
+        self.l_order = QtGui.QLabel("Set mesh order ", self)
+        self.sb_order = QtGui.QSpinBox(self)
+        self.sb_order.setValue(2)
+        self.sb_order.setMaximum(5)
+        self.sb_order.setMinimum(1)
         # Other gmsh commands:
-        self.tmop = QtGui.QLabel("More Command Options ",self)
-        self.mop = QtGui.QLineEdit(self)
+        self.l_cmd_line_opt = QtGui.QLabel("Custom gmsh options ", self)
+        self.le_cmd_line_opt = QtGui.QLineEdit(self)
+        self.le_cmd_line_opt.setToolTip("Those option will be appended to gmsh command line call")
         # Ok buttons:
         self.okbox = QtGui.QDialogButtonBox(self)
         self.okbox.setOrientation(QtCore.Qt.Horizontal)
-        self.okbox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.okbox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
+        # Web button
+        self.pb_web = QtGui.QPushButton(self)
+        self.pb_web.setText("gmsh options (web)")
+        self.pb_web.clicked.connect(self.open_gmsh_options)
         # Layout:
         layout = QtGui.QGridLayout()
-#        layout.addWidget(self.tM, 1, 0)
-        layout.addWidget(self.CB2D, 1, 0)
-        layout.addWidget(self.CB3D, 1, 1)
-        layout.addWidget(self.t0, 2, 0)
-        layout.addWidget(self.combo, 2, 1)
-        layout.addWidget(self.tf, 3, 0)
-        layout.addWidget(self.combo2, 3, 1)
-        layout.addWidget(self.t1, 4, 0)
-        layout.addWidget(self.l1, 4, 1)
-        layout.addWidget(self.tord, 5, 0)
-        layout.addWidget(self.lord, 5, 1)
-        #layout.addWidget(self.toptim, 6, 1)
-        layout.addWidget(self.optim, 6, 0)
-        layout.addWidget(self.tmop, 7, 0)
-        layout.addWidget(self.mop, 7, 1)
-        layout.addWidget(self.okbox,8,1)
+        layout.addWidget(self.rb_2D, 1, 0)
+        layout.addWidget(self.rb_3D, 1, 1)
+        layout.addWidget(self.cb_optimized, 2, 0)
+        layout.addWidget(self.l_algorithm, 3, 0)
+        layout.addWidget(self.cmb_algorithm, 3, 1)
+        layout.addWidget(self.l_format, 4, 0)
+        layout.addWidget(self.cmb_format, 4, 1)
+        layout.addWidget(self.l_max_elem_size, 5, 0)
+        layout.addWidget(self.sb_max_element_size, 5, 1)
+        layout.addWidget(self.l_order, 6, 0)
+        layout.addWidget(self.sb_order, 6, 1)
+        layout.addWidget(self.l_cmd_line_opt, 7, 0)
+        layout.addWidget(self.le_cmd_line_opt, 7, 1)
+        layout.addWidget(self.pb_web, 8, 0)
+        layout.addWidget(self.okbox, 8, 1)
         self.setLayout(layout)
         # Connectors:
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
 
+    def open_gmsh_options(self):
+        import webbrowser
+        webbrowser.open('http://www.geuz.org/gmsh/doc/texinfo/gmsh.html#Command_002dline-options')
+
+    def rb_2D_toggled(self, state):
+        print state
+        if state:
+            self.stored_cmb_format_index = self.cmb_format.currentIndex()
+            # Forcing STL
+            self.cmb_format.setCurrentIndex(1)
+            self.cmb_format.setEnabled(False)
+        else:
+            self.cmb_format.setCurrentIndex(self.stored_cmb_format_index)
+            self.cmb_format.setEnabled(True)
+
     def cancel(self):
-       self.close()
-       d.close()
-
-    def OptimState(self, state):
-        if state == QtCore.Qt.Checked:
-            self.optimized = True
-        else:
-            self.optimized = False
-
-    def f2DState(self, state):
-        if state == QtCore.Qt.Checked:
-            self.f2D = True
-            self.CB3D.setCheckState(QtCore.Qt.Unchecked)
-        else:
-            self.f2D = False
-
-    def f3DState(self, state):
-        if state == QtCore.Qt.Checked:
-            self.f3D= True
-            self.CB2D.setCheckState(QtCore.Qt.Unchecked)
-        else:
-            self.f3D = False
+        self.close()
+        d.close()
 
     def proceed(self):
-       try:
-          clmax = self.l1.text()
-          mop = self.mop.text()
-          algo =self.combo.currentText()
-          format=self.combo2.currentText()
-          if self.optimized == True:
-             a = ' -optimize'
-          else:
-             a = ' '
-          sel = FreeCADGui.Selection.getSelection()
-          sel1=sel[0]
-          nam = sel1.Name
-          TempFile = tempfile.mkstemp(suffix='.step')[1]
-          TempMeshFile = '/tmp/' + nam + '_Mesh.' + format
-          ImportGui.export(sel,TempFile)
-          options = ' -algo ' + algo +' -clmax ' + clmax + ' ' + mop + a
-          if self.f3D == True:
-             dim = ' -3 '
-          if self.f2D == True:
-             dim = ' -2 '
-          command = 'gmsh ' + TempFile + dim + '-format ' + format + ' -o ' + TempMeshFile + ' ' + options
-          output = subprocess.check_output([command, '-1'], shell = True, stderr=subprocess.STDOUT,)
-          FreeCAD.Console.PrintMessage(output)
-          if format == 'unv' or format == 'med':
-             Fem.insert(TempMeshFile,App.ActiveDocument.Name)
-          if format == 'stl':
-             Mesh.insert(TempMeshFile,App.ActiveDocument.Name)
-          del TempFile
-          del TempMeshFile
-       except:
-           FreeCAD.Console.PrintError('Error!!, sorry..')
-           FreeCAD.Console.PrintMessage(output)
-           del TempFile
-           del TempMeshFile
+        temp_file = tempfile.mkstemp(suffix='.step')[1]
+        selection = FreeCADGui.Selection.getSelection()
+        if not selection:
+            QtGui.QMessageBox.critical(None, "GMSHMesh macro", "An object has to be selected to run gmsh!")
+            return
+        selection_name = selection[0].Name
+
+        file_format = self.cmb_format.currentText()
+        temp_mesh_file = '/tmp/' + selection_name + '_Mesh.' + file_format
+
+        clmax = self.sb_max_element_size.text()
+        cmd_line_opt = self.le_cmd_line_opt.text()
+        algo = self.cmb_algorithm.currentText()
+        order = self.sb_order.text()
+
+        if self.cb_optimized.isChecked():
+            cmd_optimize = ' -optimize -optimize_ho'
+        else:
+            cmd_optimize = ' '
+
+        if self.rb_3D.isChecked():
+            dim = ' -3 '
+        else:
+            dim = ' -2 '
+
+        ImportGui.export(selection, temp_file)
+        options = ' -algo ' + algo + ' -clmax ' + clmax + ' ' + cmd_line_opt + cmd_optimize
+        command = 'gmsh ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file + ' -order ' + order + ' ' + options
+        print "Running: {}".format(command)
+        try:
+            output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
+            FreeCAD.Console.PrintMessage(output)
+            if file_format in ('unv', 'med'):
+                Fem.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
+            if file_format == 'stl':
+                Mesh.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
+        except:
+            FreeCAD.Console.PrintError("Unexpected error in GMSHMesh macro: {}".format(sys.exc_info()[0]))
+        finally:
+            try:
+                del temp_file
+            except:
+                pass
+            try:
+                del temp_mesh_file
+            except:
+                pass
 
 
 mw = FreeCADGui.getMainWindow()
 d = QtGui.QDockWidget()
 d.setWidget(MeshGmsh())
-mw.addDockWidget(QtCore. Qt.RightDockWidgetArea,d)
+d.toggleViewAction().setText("Gmsh")
+d.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+mw.addDockWidget(QtCore. Qt.RightDockWidgetArea, d)
 
-#INFO FOR COMMANDS LINES : 
+#INFO FOR COMMANDS LINES :
 #import WebGui
 #WebGui.openBrowser('http://www.geuz.org/gmsh/doc/texinfo/gmsh.html#Command_002dline-options')
