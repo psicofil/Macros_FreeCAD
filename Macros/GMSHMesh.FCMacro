@@ -37,7 +37,7 @@ class MeshGmsh(QtGui.QWidget):
         self.cmb_algorithm = QtGui.QComboBox(self)
         self.algorithm_list = [self.tr('iso'), self.tr('netgen'), self.tr('tetgen'), self.tr('meshadapt'), ]
         self.cmb_algorithm.addItems(self.algorithm_list)
-        self.cmb_algorithm.setCurrentIndex(2)
+        self.cmb_algorithm.setCurrentIndex(1)
         # Format:
         self.l_format = QtGui.QLabel("Format ", self)
         self.cmb_format = QtGui.QComboBox(self)
