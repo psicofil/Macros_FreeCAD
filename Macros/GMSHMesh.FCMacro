@@ -5,6 +5,8 @@
 # License: LGPL v 2.1
 from PySide import QtGui, QtCore
 import Fem
+import FemGui
+import MechanicalAnalysis
 import FreeCAD
 import FreeCADGui
 import ImportGui
@@ -32,6 +34,9 @@ class MeshGmsh(QtGui.QWidget):
         # Optimized:
         self.cb_optimized = QtGui.QCheckBox("    Optimized", self)
         self.cb_optimized.setChecked(QtCore.Qt.Checked)
+        # Create Mechanical Analysis from mesh
+        self.cb_mec_anal = QtGui.QCheckBox("    Create Mechanical Analysis from mesh",self)
+        #self.cb_mec_anal.setChecked(QtCore.Qt.Checked)
         # Algorithm:
         self.l_algorithm = QtGui.QLabel("Algorithm ", self)
         self.cmb_algorithm = QtGui.QComboBox(self)
@@ -82,10 +87,11 @@ class MeshGmsh(QtGui.QWidget):
         layout.addWidget(self.sb_max_element_size, 5, 1)
         layout.addWidget(self.l_order, 6, 0)
         layout.addWidget(self.sb_order, 6, 1)
-        layout.addWidget(self.l_cmd_line_opt, 7, 0)
-        layout.addWidget(self.le_cmd_line_opt, 7, 1)
-        layout.addWidget(self.pb_web, 8, 0)
-        layout.addWidget(self.okbox, 8, 1)
+        layout.addWidget(self.cb_mec_anal, 7, 0)
+        layout.addWidget(self.l_cmd_line_opt, 8, 0)
+        layout.addWidget(self.le_cmd_line_opt, 8, 1)
+        layout.addWidget(self.pb_web, 9, 0)
+        layout.addWidget(self.okbox, 9, 1)
         self.setLayout(layout)
         # Connectors:
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
@@ -147,6 +153,11 @@ class MeshGmsh(QtGui.QWidget):
                 Fem.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
             if file_format == 'stl':
                 Mesh.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
+            if self.cb_mec_anal.isChecked():
+              FMesh = App.activeDocument().ActiveObject
+              MechanicalAnalysis.makeMechanicalAnalysis('MechanicalAnalysis')
+              FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)
+              App.activeDocument().ActiveObject.Member = App.activeDocument().ActiveObject.Member + [FMesh]
         except:
             FreeCAD.Console.PrintError("Unexpected error in GMSHMesh macro: {}".format(sys.exc_info()[0]))
         finally:
