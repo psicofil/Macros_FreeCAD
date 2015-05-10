@@ -3,6 +3,12 @@
 # Author: Gomez Lucio
 # Modified by: PrzemoF
 # License: LGPL v 2.1
+
+# CONFIGURATION - EDIT THE FOLLOWING LINE TO MATCH YOUR GMSH BINARY
+gmsh_bin = "/usr/bin/gmsh"
+# END CONFIGURATION
+
+# START OF MACRO
 from PySide import QtGui, QtCore
 import Fem
 import FemGui
@@ -144,7 +150,7 @@ class MeshGmsh(QtGui.QWidget):
 
         ImportGui.export(selection, temp_file)
         options = ' -algo ' + algo + ' -clmax ' + clmax + ' ' + cmd_line_opt + cmd_optimize
-        command = 'gmsh ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file + ' -order ' + order + ' ' + options
+        command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file + ' -order ' + order + ' ' + options
         print "Running: {}".format(command)
         try:
             output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
@@ -178,6 +184,4 @@ d.toggleViewAction().setText("Gmsh")
 d.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 mw.addDockWidget(QtCore. Qt.RightDockWidgetArea, d)
 
-#INFO FOR COMMANDS LINES :
-#import WebGui
-#WebGui.openBrowser('http://www.geuz.org/gmsh/doc/texinfo/gmsh.html#Command_002dline-options')
+# END OF MACRO
