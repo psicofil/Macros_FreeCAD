@@ -35,7 +35,6 @@ class MeshGmsh(QtGui.QWidget):
         self.title.show()
         self.rb_2D = QtGui.QRadioButton("   2D", self)
         self.rb_3D = QtGui.QRadioButton("   3D", self)
-        self.rb_2D.toggled.connect(self.rb_2D_toggled)
         self.rb_3D.setChecked(QtCore.Qt.Checked)
         # Optimized:
         self.cb_optimized = QtGui.QCheckBox("    Optimized", self)
@@ -79,7 +78,6 @@ class MeshGmsh(QtGui.QWidget):
         # Web button
         self.pb_web = QtGui.QPushButton(self)
         self.pb_web.setText("gmsh options (web)")
-        self.pb_web.clicked.connect(self.open_gmsh_options)
         # Layout:
         layout = QtGui.QGridLayout()
         layout.addWidget(self.rb_2D, 1, 0)
@@ -102,13 +100,14 @@ class MeshGmsh(QtGui.QWidget):
         # Connectors:
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
+        self.pb_web.clicked.connect(self.open_gmsh_options)
+        self.rb_2D.toggled.connect(self.rb_2D_toggled)
 
     def open_gmsh_options(self):
         import webbrowser
         webbrowser.open('http://www.geuz.org/gmsh/doc/texinfo/gmsh.html#Command_002dline-options')
 
     def rb_2D_toggled(self, state):
-        print state
         if state:
             self.stored_cmb_format_index = self.cmb_format.currentIndex()
             # Forcing STL

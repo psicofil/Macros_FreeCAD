@@ -1,0 +1,126 @@
+# -*- coding: utf-8 -*-
+# Create a parametric curve
+# Author: Gomez Lucio
+# License: LGPL v 2.1
+
+import FreeCAD
+from PySide import QtGui,QtCore
+import Part
+import Draft
+from math import *
+
+class ParamCurv(QtGui.QWidget):
+    def __init__(self):
+        super(ParamCurv, self).__init__()
+        self.initUI()
+        
+    def __del__(self):
+        return
+        
+    def initUI(self):
+        # Title
+        self.l_title = QtGui.QLabel("<b>Parametric Curve <b>", self)
+        self.l_title.show()
+        # Equations
+        self.l_equation = QtGui.QLabel("Equation :",self)
+        self.l_x_equation = QtGui.QLabel("    X(t) ",self)
+        self.le_x_equation = QtGui.QLineEdit(self)
+        self.le_x_equation.setText("cos(t)")
+        self.l_y_equation = QtGui.QLabel("    Y(t) ",self)
+        self.le_y_equation = QtGui.QLineEdit(self)
+        self.le_y_equation.setText("sin(t)")
+        self.l_z_equation = QtGui.QLabel("    Z(t) ",self)
+        self.le_z_equation = QtGui.QLineEdit(self)
+        self.le_z_equation.setText("0")
+        # Parameters
+        self.l_parameters = QtGui.QLabel("Parameters :",self)
+        self.l_min_t = QtGui.QLabel("    Min t ",self)
+        self.le_min_t = QtGui.QLineEdit(self)
+        self.le_min_t.setText("0")
+        self.l_max_t = QtGui.QLabel("    Max t ",self)
+        self.le_max_t = QtGui.QLineEdit(self)
+        self.le_max_t.setText("2*pi")
+        self.l_interval = QtGui.QLabel("    Interval ",self)
+        self.le_interval = QtGui.QLineEdit(self)
+        self.le_interval.setText("0.25*pi")
+        # Line Style
+        self.l_type_line = QtGui.QLabel("Type of Line :",self)
+        self.cb_polyline = QtGui.QRadioButton("    Polyline",self)
+        self.cb_polyline.setChecked(QtCore.Qt.Checked)
+        self.cb_bspline = QtGui.QRadioButton("    Bspline",self)
+        self.cb_close_curve = QtGui.QCheckBox("    Closed Curve",self)
+        # Ok and cancel buttons
+        self.bt_create = QtGui.QPushButton("Create Curve",self)
+        self.bt_exit = QtGui.QPushButton("Close",self)
+        # Layout
+        layout = QtGui.QGridLayout()
+        layout.addWidget(self.l_equation, 0, 0)
+        layout.addWidget(self.l_x_equation, 1, 0)
+        layout.addWidget(self.le_x_equation, 1, 1)
+        layout.addWidget(self.l_y_equation, 2, 0)
+        layout.addWidget(self.le_y_equation, 2, 1)
+        layout.addWidget(self.l_z_equation, 3, 0)
+        layout.addWidget(self.le_z_equation, 3, 1)
+        layout.addWidget(self.l_parameters, 4, 0)
+        layout.addWidget(self.l_min_t, 5, 0)
+        layout.addWidget(self.le_min_t, 5, 1)
+        layout.addWidget(self.l_max_t, 6, 0)
+        layout.addWidget(self.le_max_t, 6, 1)
+        layout.addWidget(self.l_interval, 7, 0)
+        layout.addWidget(self.le_interval, 7, 1)
+        layout.addWidget(self.cb_close_curve, 8, 0)
+        layout.addWidget(self.l_type_line, 9, 0)
+        layout.addWidget(self.cb_polyline, 10, 0)
+        layout.addWidget(self.cb_bspline, 10, 1)
+        layout.addWidget(self.bt_create, 11, 0)
+        layout.addWidget(self.bt_exit, 11, 1)
+        self.setLayout(layout)
+        # Connectors
+        QtCore.QObject.connect(self.bt_create, QtCore.SIGNAL("pressed()"),self.DrawCurve)
+        QtCore.QObject.connect(self.bt_exit, QtCore.SIGNAL("pressed()"),self.Close)
+
+    def DrawCurve(self):
+        x_equation = str(self.le_x_equation.text())
+        y_equation = str(self.le_y_equation.text())
+        z_equation = str(self.le_z_equation.text())
+        try:
+          t = eval(str(self.le_min_t.text()))
+          max_t = eval(self.le_max_t.text())
+          interval = eval(str(self.le_interval.text()))
+          num_steps=(max_t-t)/interval
+        except:
+	  FreeCAD.Console.PrintError("Error in evaluating the parameters")
+        points = []
+        try:
+	  for i in range(int(num_steps)+1):
+	      x_point = eval(x_equation)
+	      y_point = eval(y_equation)
+	      z_point = eval(z_equation)
+	      points.append(FreeCAD.Vector(x_point,y_point,z_point))
+	      t+=interval
+	  curve = Part.makePolygon(points)
+	  if self.cb_close_curve.isChecked():
+	      self.cclose = True
+	  else:
+	      self.cclose = False  
+	  if self.cb_bspline.isChecked():
+	      Draft.makeBSpline(curve,closed=self.cclose,face=False)
+	      #Draft.makeBezCurve(curva,closed=self.cclose,support=None)
+	  if self.cb_polyline.isChecked():
+	      Draft.makeWire(curve,closed=self.cclose,face=False)
+        except:
+	  FreeCAD.Console.PrintError("Error in evaluating the parametric function") 
+            
+    def Close(self):
+        self.close()
+        d.close()
+
+# Run ParamCurv
+mw = FreeCADGui.getMainWindow()
+d = QtGui.QDockWidget()
+d.setWidget(ParamCurv())
+d.toggleViewAction().setText("Parametric Curve")
+d.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+mw.addDockWidget(QtCore. Qt.RightDockWidgetArea, d)
+
+
