@@ -2,7 +2,7 @@
 
 # RenderPovRay Macro
 With this Macro can edit .pov files inside in FreeCAD, setting up the final image size, report rendering console, set the quality, antialasing, alpha channel and more command options.
-![ScreenShot](https://raw.github.com/psicofil/Macros_FreeCAD/blob/master/Preview%20Pictures/RenderPovray.png)
+![ScreenShot](PreviewPictures/RenderPovray.png)
 A video demonstration can be found in youtube at the following address:
 https://www.youtube.com/watch?v=WGlv5cnkMv8
 
