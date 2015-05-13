@@ -8,12 +8,13 @@ https://www.youtube.com/watch?v=WGlv5cnkMv8
 
 # GMSHMesh Macro
 Macro to create mesh inside of freecad with GMSH mesher.
+![ScreenShot](PreviewPictures/GMSHMesh.png)
 A video demonstration can be found in youtube at the following address:
 https://www.youtube.com/watch?v=ZcG5EEUe3yc
 
 # ParametricCurve Macro
 This macro creates a curve described by parametric equations x(t), y(t) and z(t). With the possibility to choose between b-spline and polyline for the type of line between points.
-
+![ScreenShot](PreviewPictures/ParametricCurve.png)
 
 Sorry for my bad English
 

@@ -22,7 +22,7 @@ class ParamCurv(QtGui.QWidget):
         self.l_title = QtGui.QLabel("<b>Parametric Curve <b>", self)
         self.l_title.show()
         # Equations
-        self.l_equation = QtGui.QLabel("Equation :",self)
+        self.l_equation = QtGui.QLabel("<b>Equation :<b>",self)
         self.l_x_equation = QtGui.QLabel("    X(t) ",self)
         self.le_x_equation = QtGui.QLineEdit(self)
         self.le_x_equation.setText("cos(t)")
@@ -33,7 +33,7 @@ class ParamCurv(QtGui.QWidget):
         self.le_z_equation = QtGui.QLineEdit(self)
         self.le_z_equation.setText("0")
         # Parameters
-        self.l_parameters = QtGui.QLabel("Parameters :",self)
+        self.l_parameters = QtGui.QLabel("<b>Parameters :<b>",self)
         self.l_min_t = QtGui.QLabel("    Min t ",self)
         self.le_min_t = QtGui.QLineEdit(self)
         self.le_min_t.setText("0")
