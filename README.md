@@ -16,6 +16,9 @@ https://www.youtube.com/watch?v=ZcG5EEUe3yc
 This macro creates a curve described by parametric equations x(t), y(t) and z(t). With the possibility to choose between b-spline and polyline for the type of line between points.
 ![ScreenShot](PreviewPictures/ParametricCurve.png)
 
+# AnimatedConstrain Macro
+This Macro animate a angle constraint and review the resulting effects. This function helps you see how varying a dimension affects the geometry.
+
 Sorry for my bad English
 
 
