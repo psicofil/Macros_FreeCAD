@@ -17,7 +17,7 @@ This macro creates a curve described by parametric equations x(t), y(t) and z(t)
 ![ScreenShot](PreviewPictures/ParametricCurve.png)
 Old video demonstration can be found in youtube at the following address:
 video demonstration can be found in youtube at the following address:
-
+https://www.youtube.com/watch?v=DZb7z5HKU6k
 
 # AnimatedConstrain Macro
 This Macro animate a angle constraint and review the resulting effects. This function helps you see how varying a dimension affects the geometry.
