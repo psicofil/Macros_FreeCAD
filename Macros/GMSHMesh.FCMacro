@@ -33,6 +33,7 @@ class MeshGmsh(QtGui.QWidget):
     def initUI(self):
         self.title = QtGui.QLabel("<b>Macro GMSH mesh generator <b>", self)
         self.title.show()
+        self.rb_1D = QtGui.QRadioButton("   1D", self)
         self.rb_2D = QtGui.QRadioButton("   2D", self)
         self.rb_3D = QtGui.QRadioButton("   3D", self)
         self.rb_3D.setChecked(QtCore.Qt.Checked)
@@ -80,8 +81,9 @@ class MeshGmsh(QtGui.QWidget):
         self.pb_web.setText("gmsh options (web)")
         # Layout:
         layout = QtGui.QGridLayout()
-        layout.addWidget(self.rb_2D, 1, 0)
-        layout.addWidget(self.rb_3D, 1, 1)
+        layout.addWidget(self.rb_1D, 1, 0)
+        layout.addWidget(self.rb_2D, 1, 1)
+        layout.addWidget(self.rb_3D, 1, 2)
         layout.addWidget(self.cb_optimized, 2, 0)
         layout.addWidget(self.l_algorithm, 3, 0)
         layout.addWidget(self.cmb_algorithm, 3, 1)
@@ -101,21 +103,10 @@ class MeshGmsh(QtGui.QWidget):
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
         self.pb_web.clicked.connect(self.open_gmsh_options)
-        self.rb_2D.toggled.connect(self.rb_2D_toggled)
 
     def open_gmsh_options(self):
         import webbrowser
         webbrowser.open('http://www.geuz.org/gmsh/doc/texinfo/gmsh.html#Command_002dline-options')
-
-    def rb_2D_toggled(self, state):
-        if state:
-            self.stored_cmb_format_index = self.cmb_format.currentIndex()
-            # Forcing STL
-            self.cmb_format.setCurrentIndex(1)
-            self.cmb_format.setEnabled(False)
-        else:
-            self.cmb_format.setCurrentIndex(self.stored_cmb_format_index)
-            self.cmb_format.setEnabled(True)
 
     def cancel(self):
         self.close()
@@ -144,8 +135,10 @@ class MeshGmsh(QtGui.QWidget):
 
         if self.rb_3D.isChecked():
             dim = ' -3 '
-        else:
+        if self.rb_2D.isChecked():
             dim = ' -2 '
+        if self.rb_1D.isChecked():
+            dim = ' -1 '
 
         ImportGui.export(selection, temp_file)
         options = ' -algo ' + algo + ' -clmax ' + clmax + ' ' + cmd_line_opt + cmd_optimize
@@ -163,6 +156,9 @@ class MeshGmsh(QtGui.QWidget):
               MechanicalAnalysis.makeMechanicalAnalysis('MechanicalAnalysis')
               FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)
               App.activeDocument().ActiveObject.Member = App.activeDocument().ActiveObject.Member + [FMesh]
+            if self.rb_1D.isChecked():
+              FMeshG = Gui.ActiveDocument.ActiveObject
+              FMeshG.DisplayMode = "Elements & Nodes"
         except:
             FreeCAD.Console.PrintError("Unexpected error in GMSHMesh macro: {}".format(sys.exc_info()[0]))
         finally:
