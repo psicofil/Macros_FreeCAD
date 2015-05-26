@@ -16,7 +16,6 @@ https://www.youtube.com/watch?v=ZcG5EEUe3yc
 This macro creates a curve described by parametric equations x(t), y(t) and z(t). With the possibility to choose between b-spline and polyline for the type of line between points.
 ![ScreenShot](PreviewPictures/ParametricCurve.png)
 Old video demonstration can be found in youtube at the following address:
-video demonstration can be found in youtube at the following address:
 https://www.youtube.com/watch?v=DZb7z5HKU6k
 
 # AnimatedConstrain Macro
