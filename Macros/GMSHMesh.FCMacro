@@ -56,18 +56,27 @@ class MeshGmsh(QtGui.QWidget):
         self.cmb_format.addItems(self.format_list)
         self.cmb_format.setCurrentIndex(0)
         self.stored_cmb_format_index = 0
-        # Element size:
-        self.l_max_elem_size = QtGui.QLabel("Set maximum mesh element size ", self)
+        # Element max size:
+        self.cb_max_elme_size = QtGui.QCheckBox("  Set maximum mesh element size",self)
+        self.cb_max_elme_size.setChecked(QtCore.Qt.Checked)
         self.sb_max_element_size = QtGui.QDoubleSpinBox(self)
         self.sb_max_element_size.setValue(5.0)
         self.sb_max_element_size.setMaximum(10000000.0)
         self.sb_max_element_size.setMinimum(0.00000001)
-        # Set Order:
-        self.l_order = QtGui.QLabel("Set mesh order ", self)
-        self.sb_order = QtGui.QSpinBox(self)
-        self.sb_order.setValue(2)
-        self.sb_order.setMaximum(5)
-        self.sb_order.setMinimum(1)
+        # Element min size:
+        self.cb_min_elme_size = QtGui.QCheckBox("  Set minimum mesh element size",self)
+        self.sb_min_element_size = QtGui.QDoubleSpinBox(self)
+        self.sb_min_element_size.setValue(1.0)
+        self.sb_min_element_size.setMaximum(10000000.0)
+        self.sb_min_element_size.setMinimum(0.00000001)
+        self.sb_min_element_size.setEnabled(False)
+        # Set Mesh Order:
+        self.cb_mesh_order = QtGui.QCheckBox("  mesh order",self)
+        self.cb_mesh_order.setChecked(QtCore.Qt.Checked)
+        self.sb_mesh_order = QtGui.QSpinBox(self)
+        self.sb_mesh_order.setValue(2)
+        self.sb_mesh_order.setMaximum(5)
+        self.sb_mesh_order.setMinimum(1)
         # Other gmsh commands:
         self.l_cmd_line_opt = QtGui.QLabel("Custom gmsh options ", self)
         self.le_cmd_line_opt = QtGui.QLineEdit(self)
@@ -83,26 +92,49 @@ class MeshGmsh(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         layout.addWidget(self.rb_1D, 1, 0)
         layout.addWidget(self.rb_2D, 1, 1)
-        layout.addWidget(self.rb_3D, 1, 2)
-        layout.addWidget(self.cb_optimized, 2, 0)
+        layout.addWidget(self.rb_3D, 2, 0)
+        layout.addWidget(self.cb_optimized, 2, 1)
         layout.addWidget(self.l_algorithm, 3, 0)
         layout.addWidget(self.cmb_algorithm, 3, 1)
         layout.addWidget(self.l_format, 4, 0)
         layout.addWidget(self.cmb_format, 4, 1)
-        layout.addWidget(self.l_max_elem_size, 5, 0)
+        layout.addWidget(self.cb_max_elme_size, 5, 0)
         layout.addWidget(self.sb_max_element_size, 5, 1)
-        layout.addWidget(self.l_order, 6, 0)
-        layout.addWidget(self.sb_order, 6, 1)
-        layout.addWidget(self.cb_mec_anal, 7, 0)
-        layout.addWidget(self.l_cmd_line_opt, 8, 0)
-        layout.addWidget(self.le_cmd_line_opt, 8, 1)
-        layout.addWidget(self.pb_web, 9, 0)
-        layout.addWidget(self.okbox, 9, 1)
+        layout.addWidget(self.cb_min_elme_size, 6, 0)
+        layout.addWidget(self.sb_min_element_size, 6, 1)
+        layout.addWidget(self.cb_mesh_order, 7, 0)
+        layout.addWidget(self.sb_mesh_order, 7, 1)
+        layout.addWidget(self.cb_mec_anal, 8, 0)
+        layout.addWidget(self.l_cmd_line_opt, 9, 0)
+        layout.addWidget(self.le_cmd_line_opt, 9, 1)
+        layout.addWidget(self.pb_web, 10, 0)
+        layout.addWidget(self.okbox, 10, 1)
         self.setLayout(layout)
         # Connectors:
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
         QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
         self.pb_web.clicked.connect(self.open_gmsh_options)
+        self.cb_max_elme_size.stateChanged.connect(self.max_size_state)
+        self.cb_min_elme_size.stateChanged.connect(self.min_size_state)
+        self.cb_mesh_order.stateChanged.connect(self.mesh_order_state)
+        
+    def max_size_state(self, state):   
+        if state == QtCore.Qt.Checked:
+            self.sb_max_element_size.setEnabled(True)
+        else:
+            self.sb_max_element_size.setEnabled(False)
+
+    def min_size_state(self, state):   
+        if state == QtCore.Qt.Checked:
+            self.sb_min_element_size.setEnabled(True)
+        else:
+            self.sb_min_element_size.setEnabled(False)
+            
+    def mesh_order_state(self, state):   
+        if state == QtCore.Qt.Checked:
+            self.sb_mesh_order.setEnabled(True)
+        else:
+            self.sb_mesh_order.setEnabled(False)
 
     def open_gmsh_options(self):
         import webbrowser
@@ -124,9 +156,10 @@ class MeshGmsh(QtGui.QWidget):
         temp_mesh_file = '/tmp/' + selection_name + '_Mesh.' + file_format
 
         clmax = self.sb_max_element_size.text()
+        clmin = self.sb_min_element_size.text()
         cmd_line_opt = self.le_cmd_line_opt.text()
         algo = self.cmb_algorithm.currentText()
-        order = self.sb_order.text()
+        mesh_order = self.sb_mesh_order.text()
 
         if self.cb_optimized.isChecked():
             cmd_optimize = ' -optimize'
@@ -139,10 +172,22 @@ class MeshGmsh(QtGui.QWidget):
             dim = ' -2 '
         if self.rb_1D.isChecked():
             dim = ' -1 '
+        if self.cb_max_elme_size.isChecked():
+            max_size = ' -clmax ' + clmax
+        else:
+            max_size = ''
+        if self.cb_min_elme_size.isChecked():
+            min_size = ' -clmin ' + clmin
+        else:
+            min_size = ''
+        if self.cb_mesh_order.isChecked():
+            order = ' -order ' + mesh_order
+        else:
+            order = ''
 
         ImportGui.export(selection, temp_file)
-        options = ' -algo ' + algo + ' -clmax ' + clmax + ' ' + cmd_line_opt + cmd_optimize
-        command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file + ' -order ' + order + ' ' + options
+        options = ' -algo ' + algo + max_size + ' ' + min_size + ' ' + cmd_line_opt + cmd_optimize + order
+        command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file  + options
         print "Running: {}".format(command)
         try:
             output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
