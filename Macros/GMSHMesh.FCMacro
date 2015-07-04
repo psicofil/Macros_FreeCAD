@@ -154,7 +154,7 @@ class MeshGmsh(QtGui.QWidget):
         selection_name = selection[0].Name
 
         file_format = self.cmb_format.currentText()
-        temp_mesh_file = '/tmp/' + selection_name + '_Mesh.' + file_format
+        temp_mesh_file = tempfile.tempdir + '/' + selection_name + '_Mesh.' + file_format
 
         clmax = self.sb_max_element_size.text()
         clmin = self.sb_min_element_size.text()
@@ -189,7 +189,7 @@ class MeshGmsh(QtGui.QWidget):
         ImportGui.export(selection, temp_file)
         options = ' -algo ' + algo + max_size + min_size + cmd_optimize + order + cmd_line_opt
         command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file  + '' + options
-        print "Running: {}".format(command)
+        FreeCAD.Console.PrintMessage("Running: {}".format(command))
         try:
             output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
             FreeCAD.Console.PrintMessage(output)
