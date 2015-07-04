@@ -188,6 +188,7 @@ class MeshGmsh(QtGui.QWidget):
             order = ''
 
         options = ' -algo ' + algo + max_size + min_size + cmd_optimize + order + cmd_line_opt
+        # RUN GMSH
         command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file  + '' + options
         FreeCAD.Console.PrintMessage("Running: {}".format(command))
         try:
