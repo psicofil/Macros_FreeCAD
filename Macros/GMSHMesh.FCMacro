@@ -32,8 +32,7 @@ class MeshGmsh(QtGui.QWidget):
         return
 
     def initUI(self):
-        self.title = QtGui.QLabel("<b>Macro GMSH mesh generator <b>", self)
-        self.title.show()
+        # Mesh dimension
         self.rb_1D = QtGui.QRadioButton("   1D", self)
         self.rb_2D = QtGui.QRadioButton("   2D", self)
         self.rb_3D = QtGui.QRadioButton("   3D", self)
@@ -151,11 +150,13 @@ class MeshGmsh(QtGui.QWidget):
         if not selection:
             QtGui.QMessageBox.critical(None, "GMSHMesh macro", "An object has to be selected to run gmsh!")
             return
+        # Export a part in step format
+        ImportGui.export(selection, temp_file)
         selection_name = selection[0].Name
-
+        # Mesh temporaly file
         file_format = self.cmb_format.currentText()
         temp_mesh_file = tempfile.tempdir + '/' + selection_name + '_Mesh.' + file_format
-
+        # OPTIONS GMSH:
         clmax = self.sb_max_element_size.text()
         clmin = self.sb_min_element_size.text()
         cmd_line_opt = self.le_cmd_line_opt.text()
@@ -186,7 +187,6 @@ class MeshGmsh(QtGui.QWidget):
         else:
             order = ''
 
-        ImportGui.export(selection, temp_file)
         options = ' -algo ' + algo + max_size + min_size + cmd_optimize + order + cmd_line_opt
         command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file  + '' + options
         FreeCAD.Console.PrintMessage("Running: {}".format(command))
@@ -223,6 +223,7 @@ d = QtGui.QDockWidget()
 d.setWidget(MeshGmsh())
 d.toggleViewAction().setText("Gmsh")
 d.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+d.setWindowTitle(" GMSH Mesh Generator ")
 mw.addDockWidget(QtCore. Qt.RightDockWidgetArea, d)
 
 # END OF MACRO
