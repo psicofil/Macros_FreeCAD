@@ -13,7 +13,7 @@ gmsh_bin = "/usr/bin/gmsh"
 from PySide import QtGui, QtCore
 import Fem
 import FemGui
-import MechanicalAnalysis
+import FemAnalysis
 import FreeCAD
 import FreeCADGui
 import ImportGui
@@ -200,7 +200,7 @@ class MeshGmsh(QtGui.QWidget):
                 Mesh.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
             if self.cb_mec_anal.isChecked():
               FMesh = App.activeDocument().ActiveObject
-              MechanicalAnalysis.makeMechanicalAnalysis('MechanicalAnalysis')
+              FemAnalysis.makeFemAnalysis('MechanicalAnalysis')
               FemGui.setActiveAnalysis(App.activeDocument().ActiveObject)
               App.activeDocument().ActiveObject.Member = App.activeDocument().ActiveObject.Member + [FMesh]
             if self.rb_1D.isChecked():
