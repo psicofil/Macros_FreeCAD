@@ -1,0 +1,68 @@
+# -*- coding: utf-8 -*-
+## CGX PostProccesing in FreeCAD
+# Author: Gomez Lucio
+# Modified by: PrzemoF
+# License: LGPL v 2.1
+# Version: 07/02/2016
+
+########### CONFIGURATION (Linux) ######
+
+cgx_bin = '/usr/bin/cgx ' # CGX binary
+
+########### START MACRO #############
+
+# Linux --> cgx command --> cgx
+# Windows --> SciTE is installed and *.inp opens with SciTE
+
+import FreeCADGui
+import FreeCAD
+from PySide import QtCore, QtGui
+
+selection = FreeCADGui.Selection.getSelection()
+if len(selection) == 1:
+    sel = selection[0]
+    # print '\nSelected Object: ' ,sel.Name
+    if hasattr(sel,"Proxy") and sel.Proxy.Type == 'FemAnalysis':
+        # print sel.Name
+        analysis = sel
+        for m in analysis.Member:
+            if m.isDerivedFrom("Fem::FemMeshObject"):
+                filename = m.Name
+                break
+        else: # for loop runs through all members but no mesh found
+            print 'No Mesh --> No Output'
+        fem_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem")
+        ccxoutputdir = fem_prefs.GetString("WorkingDir", '')
+        filename = ccxoutputdir + '/' + filename + '.frd'
+        print filename
+        from platform import system
+        if system() == "Linux":
+            cgxcommand =cgx_bin +' -v ' + filename
+            print cgxcommand
+            #import subprocess
+            process = QtCore.QProcess()
+            try:
+                process = QtCore.QProcess()
+                process.startDetached(cgxcommand)
+                FreeCAD.Console.PrintMessage('Running '+ cgxcommand)
+            except:
+                FreeCAD.Console.PrintError('Error!!, sorry..')
+                QtGui.QMessageBox.critical(None,'Error','Error!!, Sorry.Please report the error in the FreeCAD forum',QtGui.QMessageBox.Abort)
+        elif system() == "Windows":
+            # the webbrowser.open() does not work directly on *.frd --> *.inp are used to open SciTE
+            # in windows inp-file extension has to be assigned to open SciTE on double click (works if SciTE is installed)
+            # The OutputDir of the MechanicalAnalysis should left blank --> C:/tmp is used
+            print 'In SciTE --> Menue Tools --> Post Process or Shift+F10'
+            QtGui.QMessageBox.information(None,'Information','In SciTE --> Menue Tools --> Post Process or Shift+F10',QtGui.QMessageBox.Abort)
+            import webbrowser
+            webbrowser.open(filename)
+        else:
+            print "Your OS is ", system(), ", which is not yet supported !"
+            QtGui.QMessageBox.critical(None,'Error',"Your OS is ", system(), ", which is not yet supported !",QtGui.QMessageBox.Abort)
+    else:
+        print 'Select a MechanicalAnalysis Object'
+        QtGui.QMessageBox.information(None,'Information','Select a MechanicalAnalysis Object',QtGui.QMessageBox.Abort)
+else:
+   print 'Select one MechanicalAnalysis Object'
+   QtGui.QMessageBox.information(None,'Information','Select a MechanicalAnalysis Object',QtGui.QMessageBox.Abort)
+   
