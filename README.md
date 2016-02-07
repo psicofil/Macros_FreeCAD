@@ -24,6 +24,12 @@ This Macro animate a angle constraint and review the resulting effects. This fun
 A video demonstration can be found in youtube at the following address:
 https://www.youtube.com/watch?v=kmqDcomLnk0
 
+# CGX Calculix Macro
+This Macro opens module FEM results in CGX, the official software post-processing Calculix. This function allows an alternative to see the results of your mechanical analysis.
+![ScreenShot](PreviewPictures/CGXMacro.png)
+A video demonstration can be found in youtube at the following address:
+https://www.youtube.com/watch?v=2G0wUsqlwOY
+
 Sorry for my bad English
 
 
