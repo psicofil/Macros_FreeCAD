@@ -2,11 +2,14 @@
 # Mesh with GMSH inside of FreeCAD
 # Author: Gomez Lucio
 # Modified by: PrzemoF
+# Modified by: Bernd Hahnebach (bernd@bimstatik.org)
 # License: LGPL v 2.1
 # Version: 04/07/2015
 
 # CONFIGURATION - EDIT THE FOLLOWING LINE TO MATCH YOUR GMSH BINARY
-gmsh_bin = "/usr/bin/gmsh"
+gmsh_bin_linux = "/usr/bin/gmsh"
+gmsh_bin_windwos = "C:\\Daten\\gmsh-2.10.0-Windows\\gmsh.exe"
+gmsh_bin_other = "/usr/bin/gmsh"
 # END CONFIGURATION
 
 # START OF MACRO
@@ -21,7 +24,16 @@ import Mesh
 import subprocess
 import sys
 import tempfile
-
+from platform import system
+if system() == "Linux":
+    gmsh_bin = gmsh_bin_linux
+    path_sep = "/"
+elif system() == "Windows":
+    gmsh_bin = gmsh_bin_windwos
+    path_sep = "\\"
+else:
+    gmsh_bin = gmsh_bin_other
+    path_sep = "/"
 
 class MeshGmsh(QtGui.QWidget):
     def __init__(self):
@@ -155,7 +167,7 @@ class MeshGmsh(QtGui.QWidget):
         selection_name = selection[0].Name
         # Mesh temporaly file
         file_format = self.cmb_format.currentText()
-        temp_mesh_file = tempfile.tempdir + '/' + selection_name + '_Mesh.' + file_format
+        temp_mesh_file = tempfile.tempdir + path_sep + selection_name + '_Mesh.' + file_format
         # OPTIONS GMSH:
         clmax = self.sb_max_element_size.text()
         clmin = self.sb_min_element_size.text()
@@ -192,7 +204,12 @@ class MeshGmsh(QtGui.QWidget):
         command = gmsh_bin + ' ' + temp_file + dim + '-format ' + file_format + ' -o ' + temp_mesh_file  + '' + options
         FreeCAD.Console.PrintMessage("Running: {}".format(command))
         try:
-            output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
+            if system() == "Linux":
+                output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
+            elif system() == "Windows":
+                output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT,)
+            else:
+                output = subprocess.check_output([command, '-1'], shell=True, stderr=subprocess.STDOUT,)
             FreeCAD.Console.PrintMessage(output)
             if file_format in ('unv', 'med'):
                 Fem.insert(temp_mesh_file, FreeCAD.ActiveDocument.Name)
