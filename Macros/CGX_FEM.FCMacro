@@ -5,10 +5,9 @@
 # License: LGPL v 2.1
 # Version: 07/02/2016
 
-# YOU NEED XTERM CONSOLE AND CGX SOFTWARE TO RUN THIS MACRO #
-
 ########### CONFIGURATION (Linux) ######
 
+use_xterm = 1 # Do you want use xterm? 1 if yes, 0 if no
 cgx_bin = '/home/lucio/Calculix/cgx_2.9 ' # CGX binary
 
 ########### START MACRO #############
@@ -44,7 +43,10 @@ if len(selection) == 1:
             process = QtCore.QProcess()
             try:
                 process = QtCore.QProcess()
-                process.startDetached('xterm -e ' + cgxcommand)
+                if use_xterm == 1:
+                    process.startDetached('xterm -e ' + cgxcommand)
+                else:
+                    process.startDetached(cgxcommand)
                 FreeCAD.Console.PrintMessage('Running '+ cgxcommand)
             except:
                 FreeCAD.Console.PrintError('Error!!, sorry..')
