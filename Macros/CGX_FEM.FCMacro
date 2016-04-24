@@ -5,9 +5,11 @@
 # License: LGPL v 2.1
 # Version: 07/02/2016
 
+# YOU NEED XTERM CONSOLE AND CGX SOFTWARE TO RUN THIS MACRO #
+
 ########### CONFIGURATION (Linux) ######
 
-cgx_bin = '/usr/bin/cgx ' # CGX binary
+cgx_bin = '/home/lucio/Calculix/cgx_2.9 ' # CGX binary
 
 ########### START MACRO #############
 
@@ -31,8 +33,7 @@ if len(selection) == 1:
                 break
         else: # for loop runs through all members but no mesh found
             print 'No Mesh --> No Output'
-        fem_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem")
-        ccxoutputdir = fem_prefs.GetString("WorkingDir", '')
+        ccxoutputdir = sel.OutList[0].WorkingDir
         filename = ccxoutputdir + '/' + filename + '.frd'
         print filename
         from platform import system
@@ -43,7 +44,7 @@ if len(selection) == 1:
             process = QtCore.QProcess()
             try:
                 process = QtCore.QProcess()
-                process.startDetached(cgxcommand)
+                process.startDetached('xterm -e ' + cgxcommand)
                 FreeCAD.Console.PrintMessage('Running '+ cgxcommand)
             except:
                 FreeCAD.Console.PrintError('Error!!, sorry..')
@@ -66,3 +67,4 @@ else:
    print 'Select one MechanicalAnalysis Object'
    QtGui.QMessageBox.information(None,'Information','Select a MechanicalAnalysis Object',QtGui.QMessageBox.Abort)
    
+
