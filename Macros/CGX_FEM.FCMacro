@@ -3,21 +3,23 @@
 # Author: Gomez Lucio
 # Modified by: PrzemoF
 # License: LGPL v 2.1
-# Version: 07/02/2016
+# Version: 24/04/2016
 
-########### CONFIGURATION (Linux) ######
+########### CONFIGURATION ###########
 
-use_xterm = 1 # Do you want use xterm? 1 if yes, 0 if no
-cgx_bin = '/home/lucio/Calculix/cgx_2.9 ' # CGX binary
+# Linux
+use_xterm = 0 # Do you want use xterm? 1 if yes, 0 if no (only work in Linux)
+cgx_bin = '/home/lucio/Calculix/cgx_2.9 ' # CGX binary exapmle for Linux
+
+# Windows
+# cgx_bin = '"C:\\Program Files (x86)\\bConverged\\CalculiX\\cgx\\cgx "' # CGX binary example for windows
 
 ########### START MACRO #############
-
-# Linux --> cgx command --> cgx
-# Windows --> SciTE is installed and *.inp opens with SciTE
 
 import FreeCADGui
 import FreeCAD
 from PySide import QtCore, QtGui
+from platform import system
 
 selection = FreeCADGui.Selection.getSelection()
 if len(selection) == 1:
@@ -33,10 +35,9 @@ if len(selection) == 1:
         else: # for loop runs through all members but no mesh found
             print 'No Mesh --> No Output'
         ccxoutputdir = sel.OutList[0].WorkingDir
-        filename = ccxoutputdir + '/' + filename + '.frd'
-        print filename
         from platform import system
         if system() == "Linux":
+            filename = ccxoutputdir + '/' + filename + '.frd'
             cgxcommand =cgx_bin +' -v ' + filename
             print cgxcommand
             #import subprocess
@@ -52,13 +53,18 @@ if len(selection) == 1:
                 FreeCAD.Console.PrintError('Error!!, sorry..')
                 QtGui.QMessageBox.critical(None,'Error','Error!!, Sorry.Please report the error in the FreeCAD forum',QtGui.QMessageBox.Abort)
         elif system() == "Windows":
-            # the webbrowser.open() does not work directly on *.frd --> *.inp are used to open SciTE
-            # in windows inp-file extension has to be assigned to open SciTE on double click (works if SciTE is installed)
-            # The OutputDir of the MechanicalAnalysis should left blank --> C:/tmp is used
-            print 'In SciTE --> Menue Tools --> Post Process or Shift+F10'
-            QtGui.QMessageBox.information(None,'Information','In SciTE --> Menue Tools --> Post Process or Shift+F10',QtGui.QMessageBox.Abort)
-            import webbrowser
-            webbrowser.open(filename)
+            path_sep = "\\"     
+            filename = ccxoutputdir + '\\' + filename + '.frd'
+            cgxcommand =cgx_bin +' -v ' + filename
+            #import subprocess
+            process = QtCore.QProcess()
+            try:
+                process = QtCore.QProcess()
+                process.startDetached(cgxcommand)
+                FreeCAD.Console.PrintMessage('Running '+ cgxcommand)
+            except:
+                FreeCAD.Console.PrintError('Error!!, sorry..')
+                QtGui.QMessageBox.critical(None,'Error','Error!!, Sorry.Please report the error in the FreeCAD forum',QtGui.QMessageBox.Abort)            
         else:
             print "Your OS is ", system(), ", which is not yet supported !"
             QtGui.QMessageBox.critical(None,'Error',"Your OS is ", system(), ", which is not yet supported !",QtGui.QMessageBox.Abort)
@@ -68,5 +74,3 @@ if len(selection) == 1:
 else:
    print 'Select one MechanicalAnalysis Object'
    QtGui.QMessageBox.information(None,'Information','Select a MechanicalAnalysis Object',QtGui.QMessageBox.Abort)
-   
-
